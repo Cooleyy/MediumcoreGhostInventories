@@ -1,4 +1,4 @@
-buildIgnore = *.csproj, *.sln, *.user, obj\*, bin\*
+buildIgnore = build.txt, .gitattributes, .gitignore, vs/, *.csproj, *.sln, *.user, obj\*, bin\*, Properties/, .md
 displayName = Mediumcore Ghost Inventories
 author = Cooley
 version = 1.0
