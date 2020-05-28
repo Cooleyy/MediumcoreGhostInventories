@@ -1,0 +1,4 @@
+buildIgnore = *.csproj, *.sln, *.user, obj\*, bin\*
+displayName = Mediumcore Ghost Inventories
+author = Cooley
+version = 1.0
