@@ -16,6 +16,10 @@ namespace MediumcoreGhostInventories
 
         public override bool PreKill(double damage, int hitDirection, bool pvp, ref bool playSound, ref bool genGore, ref PlayerDeathReason damageSource)
         {
+            //if not mediumcore
+            if (player.difficulty != (byte)1)
+                return true;
+
             MediumcoreGhostInventoriesWorld currentWorld = ModContent.GetInstance<MediumcoreGhostInventoriesWorld>();
 
             playerDeathInventoryMap = currentWorld.playerDeathInventoryMap;
