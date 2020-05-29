@@ -13,7 +13,7 @@ namespace MediumcoreGhostInventories
         {
             Dictionary<Point, PlayerDeathInventory> playerDeathInventoryMap = ModContent.GetInstance<MediumcoreGhostInventoriesWorld>().playerDeathInventoryMap;
             MediumcoreGhostInventoriesMessageType msgType = (MediumcoreGhostInventoriesMessageType)reader.ReadByte();
-
+            
             switch(msgType)
             {
                 case MediumcoreGhostInventoriesMessageType.KillNPC:

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
@@ -11,6 +12,7 @@ namespace MediumcoreGhostInventories
     {
         private Dictionary<Point, PlayerDeathInventory> playerDeathInventoryMap;
         private const int SEARCH_DISTANCE = 32;
+        private const int OFFSCREEN_COORDS = 704;
 
         public override bool PreKill(double damage, int hitDirection, bool pvp, ref bool playSound, ref bool genGore, ref PlayerDeathReason damageSource)
         {
@@ -47,9 +49,10 @@ namespace MediumcoreGhostInventories
 
             //Set death position to the centre of the player
             Point deathPosition = new Point((int)player.position.X, (int)player.position.Y);
+            mod.Logger.Debug($"player death position - {player.position}");
 
-            //if near current position doesnt already have an inventory on it spawn the npc and add to the inventory dictionary. Else search for a new untaken position
-            if (CheckNearbyPositions(deathPosition))
+            //if near current position doesnt already have an inventory  on it and is within the map bounds spawn the npc and add to the inventory dictionary. Else search for a new untaken position
+            if (CheckPosition(deathPosition))
             {
                 playerDeathInventoryMap[deathPosition] = currentInventory;
                 if (Main.netMode == NetmodeID.Server)
@@ -91,9 +94,18 @@ namespace MediumcoreGhostInventories
             packet.Send();
         }
 
-        //Check within search distance on X axis for other inventories. If any are found then return false
-        private bool CheckNearbyPositions(Point position)
+        //Check if can place a ghost on this position
+        private bool CheckPosition(Point position)
         {
+            //if position outside map or offscreen on X axis
+            if (position.X < Main.leftWorld + OFFSCREEN_COORDS || position.X > Main.rightWorld - OFFSCREEN_COORDS)
+                return false;
+
+            //if position outside map on Y axis
+            if (position.Y < Main.topWorld + OFFSCREEN_COORDS || position.Y > Main.bottomWorld - OFFSCREEN_COORDS)
+                return false;
+
+            //Check within search distance on X axis for other inventories. If any are found then return false
             foreach (KeyValuePair<Point, PlayerDeathInventory> entry in playerDeathInventoryMap)
             {
                 if (entry.Key.X - position.X < SEARCH_DISTANCE && position.X - entry.Key.X < SEARCH_DISTANCE)
@@ -105,23 +117,33 @@ namespace MediumcoreGhostInventories
         //Search outwards alternating right then left SEARCH_DISTANCE units at a time looking for a usable position
         private Point FindUntakenDeathPosition(Point deathPosition)
         {
-            Point searchLeft = deathPosition;
+            //Keep position within bounds of visible world on Y axis
+            deathPosition.Y = Utils.Clamp(deathPosition.Y, (int)Main.topWorld + OFFSCREEN_COORDS + SEARCH_DISTANCE, (int)Main.bottomWorld - OFFSCREEN_COORDS - SEARCH_DISTANCE);
+
             Point searchRight = deathPosition;
+            Point searchLeft = deathPosition;
 
             do
             {
-                searchLeft.X -= SEARCH_DISTANCE;
-                searchRight.X += SEARCH_DISTANCE;
-                if (CheckNearbyPositions(searchRight))
+                //if not the end of the visible world to the right
+                if (searchRight.X < Main.rightWorld - OFFSCREEN_COORDS)
                 {
-                    return searchRight;
-                }
-                else if (CheckNearbyPositions(searchLeft))
-                {
-                    return searchLeft;
+                    searchRight.X += SEARCH_DISTANCE;
+                    if (CheckPosition(searchRight))
+                        return searchRight;
                 }
 
-            } while (true);
+                //if not the end of the visible world to the left
+                if (searchLeft.X > OFFSCREEN_COORDS)
+                {
+                    searchLeft.X -= SEARCH_DISTANCE;
+                    if (CheckPosition(searchLeft))
+                        return searchLeft;
+                }
+
+            } while (searchRight.X < Main.rightWorld - OFFSCREEN_COORDS || searchLeft.X > Main.leftWorld + OFFSCREEN_COORDS); //while within map bounds, should effectively never be false but just incase to stop infinite loop
+            mod.Logger.Debug($"coudlnt find untaken position - {deathPosition}");
+            return deathPosition;
         }
 
         private void GetAndClearInventory(ref Item[] deathInventory, ref Item[] deathArmor, ref Item[] deathDye, ref Item[] deathMiscEquips, ref Item[] deathMiscDyes)
