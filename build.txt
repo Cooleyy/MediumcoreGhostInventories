@@ -1,4 +1,5 @@
 buildIgnore = build.txt, .gitattributes, .gitignore, vs/, *.csproj, *.sln, *.user, obj\*, bin\*, Properties/, .md
 displayName = Mediumcore Ghost Inventories
+homepage = https://forums.terraria.org/index.php?threads/mediumcore-ghost-inventories.92547/
 author = Cooley
-version = 1.0
+version = 0.1
