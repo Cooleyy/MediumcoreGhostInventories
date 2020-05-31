@@ -2,4 +2,4 @@ buildIgnore = build.txt, .gitattributes, .gitignore, vs/, *.csproj, *.sln, *.use
 displayName = Mediumcore Ghost Inventories
 homepage = https://forums.terraria.org/index.php?threads/mediumcore-ghost-inventories.92547/
 author = Cooley
-version = 0.1.2
+version = 0.1.2.1
