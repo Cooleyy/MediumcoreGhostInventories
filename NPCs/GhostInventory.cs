@@ -48,6 +48,8 @@ namespace MediumcoreGhostInventories.NPCs
         
         public override void AI()
         {
+            Lighting.AddLight(npc.position, 0.25F, 0.25F, 0.25F);
+
             //Get the inventory and corresponding player death position to be restored
             //The player death position is passed through the ai0 and ai1 parameters on the NewNPC method.
             // ai0 = deathPosition.X 
