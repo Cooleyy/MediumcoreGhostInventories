@@ -38,9 +38,6 @@ namespace MediumcoreGhostInventories.NPCs
             npc.dontCountMe = true;
         }
 
-        //Make sure NPC cannot die
-        //public override bool CheckDead() => false;
-
         //Make sure does not despawn
         public override bool CheckActive() => false;
 

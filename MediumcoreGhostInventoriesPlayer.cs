@@ -25,6 +25,7 @@ namespace MediumcoreGhostInventories
             playerDeathInventoryMap = currentWorld.playerDeathInventoryMap;
 
             Item[] deathInventory = new Item[player.inventory.Length];
+            bool[] favourites = new bool[player.inventory.Length];
             Item[] deathArmor = new Item[player.armor.Length];
             Item[] deathDye = new Item[player.dye.Length];
             Item[] deathMiscEquips = new Item[player.miscEquips.Length];
@@ -39,7 +40,7 @@ namespace MediumcoreGhostInventories
             }
 
             //Clears current player inventory and stores it in above arrays
-            GetAndClearInventory(ref deathInventory, ref deathArmor, ref deathDye, ref deathMiscEquips, ref deathMiscDyes);
+            GetAndClearInventory(ref deathInventory, ref favourites, ref deathArmor, ref deathDye, ref deathMiscEquips, ref deathMiscDyes);
             PlayerDeathInventory currentInventory = new PlayerDeathInventory(deathInventory, deathArmor, deathDye, deathMiscEquips, deathMiscDyes, player.name);
 
             //Dont continue if inventory is just the starter inventory
@@ -67,6 +68,9 @@ namespace MediumcoreGhostInventories
                 //Make sure npc isnt spawned yet on multiplayer clients incase they do not have updated deathInventoryMap, they will spawn the npc once they receive the spawnNPC message
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                     NPC.NewNPC(deathPosition.X, deathPosition.Y, mod.NPCType("GhostInventory"), ai0: deathPosition.X, ai1: deathPosition.Y);
+
+                if (Main.netMode == NetmodeID.MultiplayerClient && Array.Exists(favourites, element => element))
+                    SendFavorites(favourites, deathPosition.X, deathPosition.Y);//Send favourited items to server
             }
             else
             {
@@ -80,11 +84,32 @@ namespace MediumcoreGhostInventories
                 //Make sure npc isnt spawned yet on multiplayer clients incase they do not have updated deathInventoryMap, they will spawn the npc once they receive the spawnNPC message
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                     NPC.NewNPC(nextUntakenDeathPosition.X, nextUntakenDeathPosition.Y, mod.NPCType("GhostInventory"), ai0: nextUntakenDeathPosition.X, ai1: nextUntakenDeathPosition.Y);
+
+                if (Main.netMode == NetmodeID.MultiplayerClient && Array.Exists(favourites, element => element))
+                   SendFavorites(favourites, nextUntakenDeathPosition.X, nextUntakenDeathPosition.Y);//Send favourited items to server
             }
 
-            currentWorld.playerDeathInventoryMap = playerDeathInventoryMap;
-
             return true;
+        }
+
+        private void SendFavorites(bool[] favourites, int x, int y)
+        {
+            ModPacket packet = mod.GetPacket(capacity: 1000);
+            packet.Write((byte)MediumcoreGhostInventories.MediumcoreGhostInventoriesMessageType.SetFavourites);
+
+            packet.Write(x);
+            packet.Write(y);
+
+            //For each favourited item, send the position of that item in the inventory
+            for (int i = 0; i < favourites.Length; i++)
+            {
+                if (favourites[i])
+                    packet.Write(i);
+            }
+
+            //Value way outside range of inventory length, when we read this value we will stop reading for favourited items.
+            packet.Write(100);
+            packet.Send();
         }
 
         //Tell clients to spawn the inventory npc
@@ -150,11 +175,14 @@ namespace MediumcoreGhostInventories
             return deathPosition;
         }
 
-        private void GetAndClearInventory(ref Item[] deathInventory, ref Item[] deathArmor, ref Item[] deathDye, ref Item[] deathMiscEquips, ref Item[] deathMiscDyes)
+        private void GetAndClearInventory(ref Item[] deathInventory, ref bool[] favourites, ref Item[] deathArmor, ref Item[] deathDye, ref Item[] deathMiscEquips, ref Item[] deathMiscDyes)
         {
             //INVENTORY
             for (int i = 0; i < player.inventory.Length; i++)
             {
+                if(Main.netMode == NetmodeID.MultiplayerClient)
+                    favourites[i] = player.inventory[i].favorited;
+
                 deathInventory[i] = player.inventory[i];
                 player.inventory[i] = new Item();
             }

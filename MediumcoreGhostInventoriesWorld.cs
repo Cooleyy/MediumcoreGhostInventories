@@ -103,7 +103,7 @@ namespace MediumcoreGhostInventories
                 writer.Write(inventory.Key.Y);
                 writer.Write(inventory.Value.playerName);
 
-                SendItems(ref writer, inventory.Value.deathInventory);
+                SendItems(ref writer, inventory.Value.deathInventory, writeFavs: true);
                 SendItems(ref writer, inventory.Value.deathArmor);
                 SendItems(ref writer, inventory.Value.deathDye);
                 SendItems(ref writer, inventory.Value.deathMiscEquips);
@@ -112,11 +112,11 @@ namespace MediumcoreGhostInventories
         }
 
         //Adds number of Items and each Item to the writer
-        private void SendItems(ref BinaryWriter writer, Item[] itemArray)
+        private void SendItems(ref BinaryWriter writer, Item[] itemArray, bool writeFavs = false)
         {
             writer.Write(itemArray.Length);
             foreach (var item in itemArray)
-                ItemIO.Send(item, writer, writeStack: true);
+                ItemIO.Send(item, writer, writeStack: true, writeFavourite: writeFavs);
         }
 
         //Receive Inventories stored on the world from the server and rebuilds the dictionary of inventories
@@ -141,7 +141,7 @@ namespace MediumcoreGhostInventories
                 dInventoryLength = reader.ReadInt32();
                 Item[] dInventory = new Item[dInventoryLength];
                 for (int j = 0; j < dInventoryLength; j++)
-                    dInventory[j] = ItemIO.Receive(reader, readStack: true);
+                    dInventory[j] = ItemIO.Receive(reader, readStack: true, readFavorite: true);
 
                 dArmorLength = reader.ReadInt32();
                 Item[] dArmor = new Item[dArmorLength];

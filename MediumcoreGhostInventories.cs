@@ -4,6 +4,9 @@ using Terraria;
 using Terraria.ID;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Threading;
+using System;
 
 namespace MediumcoreGhostInventories
 {
@@ -48,6 +51,37 @@ namespace MediumcoreGhostInventories
                     NPC.NewNPC(positionX, positionY, NPCType("GhostInventory"), ai0: positionX, ai1: positionY);
 
                     break;
+                case MediumcoreGhostInventoriesMessageType.SetFavourites:
+                    if (Main.netMode == NetmodeID.Server)
+                    {
+                        
+                        Point deathPosition = new Point(reader.ReadInt32(), reader.ReadInt32());
+                        Logger.Debug($"deathPosition {deathPosition}");
+
+                        List<int> favouritedItems = new List<int>();
+
+                        int currentIndex = reader.ReadInt32();
+
+                        while (currentIndex != 100)
+                        {
+                            favouritedItems.Add(currentIndex);
+                            currentIndex = reader.ReadInt32();
+                        }
+
+                        Task waitForInventory = Task.Run(() => {
+                            while (!playerDeathInventoryMap.ContainsKey(deathPosition))
+                                Thread.Sleep(20);
+                            
+                            foreach (int i in favouritedItems)
+                                ModContent.GetInstance<MediumcoreGhostInventoriesWorld>().playerDeathInventoryMap[deathPosition].deathInventory[i].favorited = true;
+                            NetMessage.SendData(MessageID.WorldData);
+                        });
+                        break;
+                    }
+                    else
+                        Logger.Warn("Received server packet - ignore");
+
+                    break;
                 default:
                     Logger.WarnFormat($"MediumcoreGhostInventoriesMod: Unknown Message type: {msgType}");
                     break;
@@ -67,7 +101,8 @@ namespace MediumcoreGhostInventories
         {
             KillNPC,
             DropInventory,
-            SpawnNPC
+            SpawnNPC,
+            SetFavourites
         }
     }
 }
