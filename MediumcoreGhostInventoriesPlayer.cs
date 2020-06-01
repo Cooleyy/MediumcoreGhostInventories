@@ -99,7 +99,7 @@ namespace MediumcoreGhostInventories
 
             packet.Write(x);
             packet.Write(y);
-
+            
             //For each favourited item, send the position of that item in the inventory
             for (int i = 0; i < favourites.Length; i++)
             {

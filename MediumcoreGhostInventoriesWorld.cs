@@ -96,6 +96,7 @@ namespace MediumcoreGhostInventories
         //Send Inventories stored on the world to multiplayer clients
         public override void NetSend(BinaryWriter writer)
         {
+            mod.Logger.Debug($"Net send");
             writer.Write(playerDeathInventoryMap.Count);
             foreach (var inventory in playerDeathInventoryMap)
             {
@@ -122,6 +123,7 @@ namespace MediumcoreGhostInventories
         //Receive Inventories stored on the world from the server and rebuilds the dictionary of inventories
         public override void NetReceive(BinaryReader reader)
         {
+            mod.Logger.Debug($"Net receive");
             playerDeathInventoryMap = new Dictionary<Point, PlayerDeathInventory>();
 
             Point position = new Point();

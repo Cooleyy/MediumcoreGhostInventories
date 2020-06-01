@@ -54,7 +54,6 @@ namespace MediumcoreGhostInventories
                 case MediumcoreGhostInventoriesMessageType.SetFavourites:
                     if (Main.netMode == NetmodeID.Server)
                     {
-                        
                         Point deathPosition = new Point(reader.ReadInt32(), reader.ReadInt32());
                         Logger.Debug($"deathPosition {deathPosition}");
 
@@ -71,9 +70,10 @@ namespace MediumcoreGhostInventories
                         Task waitForInventory = Task.Run(() => {
                             while (!playerDeathInventoryMap.ContainsKey(deathPosition))
                                 Thread.Sleep(20);
-                            
+
                             foreach (int i in favouritedItems)
                                 ModContent.GetInstance<MediumcoreGhostInventoriesWorld>().playerDeathInventoryMap[deathPosition].deathInventory[i].favorited = true;
+
                             NetMessage.SendData(MessageID.WorldData);
                         });
                         break;

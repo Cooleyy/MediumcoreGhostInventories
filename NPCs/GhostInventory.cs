@@ -146,6 +146,9 @@ namespace MediumcoreGhostInventories.NPCs
 
         private void GivePlayerInventoryBack(Player player)
         {
+            //Update stored inventory just incase it has changed (for example which items were favourited was received late)
+            storedInventory = ModContent.GetInstance<MediumcoreGhostInventoriesWorld>().playerDeathInventoryMap[position];
+
             player.inventory = storedInventory.deathInventory;
             player.armor = storedInventory.deathArmor;
             player.dye = storedInventory.deathDye;
